@@ -1,0 +1,382 @@
+/**
+ * Displays a message while the mission is loading.
+ *
+ * Note that a mission that takes very little time to load
+ * will only display the message for a short time.
+ *
+ * Care should be taken to see whether your
+ * message is readable in that timeframe.
+ */
+
+// onLoadMission = "Mission Name";
+
+/**
+ * Displays a message while the intro is loading.
+ */
+
+// onLoadIntro = "Intro Message";
+
+/**
+ * Define whether you will see the time and date displayed
+ * while the mission loads. 1 means visible, 0 hidden.
+ */
+
+onLoadMissionTime = 1;
+
+/**
+ * Define whether you will see the time and date displayed
+ * while the intro loads. 1 means visible, 0 hidden.
+ **/
+
+// onLoadIntroTime = 1;
+
+/**
+ * You can define a picture to be shown while the mission is loaded.
+ * The path is relative to the mission folder.
+ */
+
+// loadScreen =  "pictures\intro.paa";
+
+/*********************************************************************
+ * Score Notes
+ *
+ * Score is related to the star display in the debriefing screen.
+ * The score can be influenced during a missions progress by using
+ * the addRating command.
+ ********************************************************************/
+
+/**
+ * Set minimum score for your mission.
+ */
+
+// minScore = 0;
+
+/**
+ * Set average score for your mission.
+ */
+
+// avgScore = 1800;
+
+/**
+ * Set minimum score for your mission.
+ */
+
+// maxScore = 75000;
+
+/**
+ * Sounds
+ *
+ * General sounds that can be used for dialog, voiceovers in the briefing etc.
+ *
+ * Example:
+ * class cfgSounds
+ * {
+ * 		sounds[] = {};
+ *		class wolf1
+ *		{
+ *			// how the sound is referred to in the editor (e.g. trigger effects)
+ * 			name = "my_wolf_sound";
+ *			// filename, volume, pitch
+ *			sound[] = {"fx\wolf1.ogg", 1, 1};
+ *			titles[] = {};
+ *		};
+ * };
+ *
+ * Use in mission:
+ * playSound "wolf1";   // use the class name!
+ * player say ["wolf1", 100];
+ *
+ * Tutorial:
+ * http://ofp.toadlife.net/downloads/tutorials/tutorial_sound/tutorial_sound.html
+ */
+
+/**
+ * Radio sentences
+ *
+ * Example:
+ * class CfgRadio
+ * {
+ *		sounds[] = {};
+ * 		class RadioMsg1
+ *		{
+ *			name = "";
+ *			sound[] = {"\sound\filename1.ogg", db-100, 1.0};
+ *			title = "I am ready for your orders.";
+ *		};
+ *		class RadioMsg2
+ *		{
+ *			name = "";
+ *			sound[] = {"\sound\filename2", db-100, 1.0}; // .wss implied
+ *			title = {$STR_RADIO_2};
+ *		};
+ * };
+ *
+ * Note that the location of the sound file is relative to the mission.
+ *
+ * Use in missions:
+ * unit sideRadio RadioMsg2
+ */
+
+/**
+ * cfgMusic
+ *
+ * Example:
+ * class CfgMusic
+ * {
+ *		tracks[]={};
+ *
+ *		class MarsIntro
+ *		{
+ *			name = "";
+ *			sound[] = {"\music\filename.ogg", db+0, 1.0};
+ *		};
+ * 		class Ludwig9
+ *		{
+ *			name = "";
+ *			sound[] = {"\music\filename.ogg", db+10, 1.0};
+ *		};
+ * };
+ *
+ * Name can be left blank as in the examples above.
+ * Only specify a name if you wish to access these sounds
+ * via the environment options of a trigger.
+ *
+ * Title is the text string that will be displayed on the
+ * screen when the sound file is played. See also Stringtable.csv
+ * http://community.bistudio.com/wiki/Stringtable.csv
+ *
+ * Setting volume (db) of music far from zero will disable
+ * fadeMusic command. Optimal values are from -10 to 10.
+ *
+ * Use in missions:
+ * playMusic  "MarsIntro"
+ */
+
+/**
+ * cfgIdentities
+ *
+ * Define the identities of individual units, you can specify
+ * the face, type of glasses worn, voice, tone of voice and name
+ * of an identity. You then give a specific unit this identity
+ * by using the command setIdentity in the mission.
+ *
+ * class CfgIdentities
+ * {
+ *		class John_Doe
+ *		{
+ *			name="John Bartholemew Doe";
+ *			face="Face20";
+ *			glasses="None";
+ *			speaker="Dan";
+ *			pitch=1.1;
+ *		};
+ * };
+ *
+ * See Category:CfgIdentities for valid options for:
+ * face, glasses, speaker etc.
+ * http://community.bistudio.com/wiki/Category:CfgIdentities
+ */
+
+/**
+ * List of keys (needed for keysLimit)
+ *
+ * Note that unlike other 'text' items $STR_ variables
+ * (in the stringtable.csv for the mission) cannot be used
+ */
+
+// keys[] = {"key1","key2","key3"};
+
+/**
+ * Number of keys from the keys list needed for unlock a mission.
+ */
+
+// keysLimit[] = 2;
+
+/**
+ * Name of key(s) needed for mark a mission in SP missions list as completed.
+ *
+ * Note that unlike other 'text' items $STR_ variables
+ * (in the stringtable.csv for the mission) cannot be used
+ *
+ * Keys can be activated using activateKey and checked by isKeyActive.
+ */
+
+// doneKeys[] = {"key4"};
+
+/**
+ * Skip briefing screen for SP missions.
+ * If no briefing.html is present, it is skipped anyway.
+ *
+ * Briefing will still be displayed untill all clients are connected and done loading.
+ */
+
+// briefing = 0;
+
+/**
+ * Defines if the debriefing is shown or not at the end of the mission.
+ */
+
+// debriefing = 0;
+
+/**
+ * rscTitles
+ *
+ * Defines custom UI displays.
+ * To show such displays, use cutRsc or titleRsc.
+ */
+
+
+/**
+ * Params
+ *
+ * Advanced multiplayer mission params, replacing obsolete titleParam%.
+ * The array of parameters can be accessed via paramsArray
+ * (Array, paramsArray select 0, etc.)
+ *
+ * Example:
+ * class Params
+ * {
+ * 		class Score
+ * 		{
+ *			title = "$STR_mp_param_score";
+ * 			values[] = {10,200};
+ * 			texts[] = {"10","200"};
+ *			default = 10;
+ * 		};
+ * 		class Duration
+ * 		{
+ *			title = "$STR_mp_param_duration";
+ *			values[] = {1,2};
+ *			texts[] = {"one hour","two hours"};
+ *			default = 1;
+ *		};
+ *		etc. .....
+ * }
+ */
+
+/**
+ * Header
+ *
+ * The purpose of this class definition is to signal the engine
+ * the gameType which is displayed in the MP game browser.
+ * This can assist other players for finding particular missions
+ * using the filters.
+ *
+ * Example:
+ * class Header
+ * {
+ *		gameType = COOP; //game type
+ *		minPlayers = 1; //min # of players the mission supports
+ *		maxPlayers = 10; //max # of players the mission supports
+ *		playerCountMultipleOf = 1; //OFP:Elite option.
+ * };
+ *
+ * gameType can be one of following:
+ * 		DM - Death Match
+ *		CTF - Capture the Flag
+ *		FF - Flag Fight
+ *		Coop -Cooperative Mission
+ *		Team - Team Mission
+ *		Scont - Sector Control
+ *		Hold - Hold Location
+ *		Unknown - Unknown - is used when no class header is defined.
+ *
+ * playerCountMultipleOf was introduced in OFP:Elite,
+ * the game server would set the maximum amount of players
+ * based on bandwidth and eventually this parameter.
+ * The default is 2, so it means the mission will try to
+ * balance the game to multiples of 2 (2 vs 2, 4 vs 4, etc.)
+ * and you did not end up with a team mission with 5 maximum
+ * players(2 vs 3 is unfair?). Coop type missions use 1,
+ * Team type missions use 2 (default).
+ *
+ * Since Arma if this class is missing the mission will
+ * still load with an error in the RPT file and the mission
+ * type will be considered Unknown.
+ */
+
+/**
+ * Chat
+ *
+ * Disable global, side, command and system chat.
+ * MOTD and admin say have exception and will show
+ * in global. Introduced in BETA 1.60.93398.
+ *
+ * 0 = Global
+ * 1 = Side
+ * 2 = Command
+ * 3 = Group
+ * 4 = Vehicle
+ * 5 = Direct
+ * 6 = System
+ */
+
+ // disableChannels[]={0,1,2,6};
+
+/**
+ * Disable dropping items while swimming. Introduced in BETA 1.60.93965.
+ *
+ * 0 = Disable
+ * 1 = Enable
+ */
+
+// enableItemsDropping = 0;
+
+/**
+ * onLoadName
+ *
+ * String (usually mission name) shown during
+ * mission loading.  * The string is shown in a
+ * slightly larger font above the loadScreen.
+ *
+ * Example:
+ * author="Varanon";
+ * OnLoadName = "Point Insertion";
+ * OnLoadMission = "A group of NATO soldiers is tasked with sabotaging a coastal defense.";
+ * loadScreen = "images\loadScreen.paa";
+ *
+ * This produces the pictured result:
+ * http://community.bistudio.com/wiki/File:2013-03-08_00004.jpg
+ *
+ * The onLoadMission text is placed below the load screen
+ * and the header gameType determines the game time on top of the box.
+ *
+ * Author of the mission:
+ * The default loading screen shows this string below
+ * the onLoadName in a smaller font prefixed by "by"
+ */
+
+// author="";
+// OnLoadName = "";
+// OnLoadMission = "";
+// loadScreen = ".paa";
+
+class CfgPatches
+	{
+	class RYD_INC
+		{
+		units[] = {};
+		weapons[] = {};
+		requiredAddons[] = {"Extended_EventHandlers"};
+		requiredVersion = 0.1;
+		};
+	};
+
+class Extended_PostInit_EventHandlers
+	{
+	RYD_INC_Post_Init = "RYD_INC_Post_Init_Var = [] execVM 'incognito.sqf'";
+	};
+
+class CfgCommunicationMenu
+	{
+	class INCSwitch
+		{
+		text = "Switch Incognito difficulty";
+		submenu = "";
+		expression = "nul = [] spawn RYD_INC_Switch;";
+		icon = "";
+		cursor = "";
+		enable = "1";
+		removeAfterExpressionCall = 0;
+		}
+	};
