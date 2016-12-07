@@ -12,45 +12,14 @@ RYD_INC_Switch =
 		};
 	};
 
-_LOSCheck =
-	{
-	private ["_pos1","_pos2","_isLOS","_cam","_target","_pX1","_pY1","_pX2","_pY2","_pos1ATL","_pos2ATL","_lvl1","_lvl2","_pos1O","_pos2O"];
+_LOSCheck = {
+	params ["_pos1O", "_pos2O", ["_cam", objNull], ["_target",objNull]];
 
-	_pos1O = _this select 0;
-	_pos2O = _this select 1;
+	private _pos1ATL = getPosATL _pos1O;
+	private _pos2ATL = getPosATL _pos2O;
 
-	_pos1 = getPosASL _pos1O;
-	_pos2 = getPosASL _pos2O;
-
-	_pX1 = _pos1 select 0;
-	_pY1 = _pos1 select 1;
-
-	_pX2 = _pos2 select 0;
-	_pY2 = _pos2 select 1;
-
-	_lvl1 = abs (((eyePos _pos1O) select 2) - (_pos1 select 2));
-	_lvl2 = abs (((eyePos _pos2O) select 2) - (_pos2 select 2));
-
-	_pos1ATL = [_pX1,_pY1,_lvl1];
-	_pos2ATL = [_pX2,_pY2,_lvl2];
-
-	_cam = objNull;
-
-	if ((count _this) > 2) then {_cam = _this select 2};
-
-	_target = objNull;
-
-	if ((count _this) > 3) then {_target = _this select 3};
-
-	_isLOS = not (terrainintersect [_pos1ATL, _pos2ATL]);
-
-	if (_isLOS) then
-		{
-		_isLOS = not (lineintersects [_pos1, _pos2,_cam,_target]);
-		};
-
-	_isLOS
-	};
+	!(terrainintersect [_pos1ATL, _pos2ATL]) && {!(lineintersects [_pos1, _pos2,_cam,_target])};
+};
 
 _isFlanking =
 	{
@@ -124,15 +93,11 @@ while {true} do
 
 	//_mainCycle = _mainCycle + 1;
 
-		{
-		_switch = _x getvariable "RYD_INC_Switched";
-		if isNil ("_switch") then
-			{
-			_x setVariable ["RYD_INC_Switched",true];
-			_sw = [_x,"INCSwitch","","",""] call BIS_fnc_addCommMenuItem;
-			}
-		}
-	foreach switchableUnits;
+	_switch = player getvariable "RYD_INC_Switched";
+	if isNil ("_switch") then {
+		player setVariable ["RYD_INC_Switched",true];
+		_sw = [player,"INCSwitch","","",""] call BIS_fnc_addCommMenuItem;
+	};
 
 //_stoper = diag_Ticktime;
 
@@ -193,40 +158,28 @@ while {true} do
 		_vh = vehicle _x;
 		_asVh = assignedVehicle _x;
 
-		if (isNull _asVh) then
-			{
-			_asVh = _vh
-			};
-
-			{
-			if (((side _x) getFriend _sideP) < 0.6) then
-				{
-				if (((leader _x) distance _vh) < viewDistance) then
-					{
-					if (((_x knowsAbout _vh) max (_x knowsAbout _asVh)) > 1) then
-						{
-						_knowAboutMeG pushBack _x;
-
-							{
-							if not (captive _x) then
-								{
-								_knowAboutMe pushBack _x
-								}
-							}
-						foreach (units _x);
-						}
-					};
-
-				_allEnemyG pushBack _x
-				}
-			}
-		foreach allGroups;
-
-		_vehs pushBack [_x,_vh,_asVh,_knowAboutMe,_knowAboutMeG];
-		}
-	foreach _units;
+		if (isNull _asVh) then { _asVh = _vh };
 
 		{
+			if (((side _x) getFriend _sideP) < 0.6) then {
+				if (((leader _x) distance _vh) < viewDistance) then {
+					if (((_x knowsAbout _vh) max (_x knowsAbout _asVh)) > 1) then {
+						_knowAboutMeG pushBack _x;
+
+						{
+							if not (captive _x) then { _knowAboutMe pushBack _x }
+						} foreach (units _x);
+					}
+				};
+
+				_allEnemyG pushBack _x
+			}
+		} foreach allGroups;
+
+		_vehs pushBack [_x,_vh,_asVh,_knowAboutMe,_knowAboutMeG];
+	} foreach _units;
+
+	{
 		_unit = _x select 0;
 		_vh = _x select 1;
 		_asVh = _x select 2;
