@@ -1,22 +1,25 @@
 RYD_INC_Diff = 0.5; // EASY
 
-_LOSCheck = {
-	params ["_pos1O", "_pos2O", ["_cam", objNull], ["_target",objNull]];
+LOSCheck = {
+	params ["_obj1", "_obj2"];
 
-	private _pos1ATL = getPosATL _pos1O;
-	private _pos2ATL = getPosATL _pos2O;
+	diag_log "LOSCHECK";
+	diag_log [_obj1, _obj2];
 
-	!(terrainintersect [_pos1ATL, _pos2ATL]) && {!(lineintersects [_pos1, _pos2,_cam,_target])};
+	private _pos1 = getPosASL _obj1;
+	private _pos2 = getPosASL _obj2;
+
+	!(terrainintersectASL [_pos1, _pos2]) && {!(lineintersects [_pos1, _pos2])};
 };
 
-_isFlanking = {
+isFlanking = {
 	params ["_point", "_rPoint"];
 	private ["_angle","_diffA","_axis","_eyeD"];
 
 	_eyeD = eyeDirection _rPoint; // 3D Vector
 	_axis = (_eyeD select 0) atan2 (_eyeD select 1); // arctangent, so angle of eyes
 
-	_angle = [getPosATL _rPoint,getPosATL _point,10] call _angTowards;
+	_angle = [getPosATL _rPoint,getPosATL _point,10] call angTowards;
 
 	if (_angle < 0) then {_angle = _angle + 360};
 	if (_axis < 0) then {_axis = _axis + 360};
@@ -28,7 +31,7 @@ _isFlanking = {
 	(_diffA > 45) && (_diffA < 315);
 };
 
-_angTowards = {
+angTowards = {
 	params ["_source0", "_target0", "_rnd0"];
 	private ["_dX0","_dY0","_angleAzimuth0"];
 
@@ -40,9 +43,9 @@ _angTowards = {
 	_angleAzimuth0;
 };
 
-_getTrueVehicleSide = {
-	params = ["_vh"];
-	configFile >> "CfgVehicles" >> (typeOf _vh) >> "Side";
+getTrueVehicleSide = {
+	params ["_vh"];
+	_side = configFile >> "CfgVehicles" >> (typeOf _vh) >> "Side";
 
 	_side = if (isNumber _side) then { getNumber _side } else { -1 };
 
@@ -57,11 +60,9 @@ _getTrueVehicleSide = {
 	};
 };
 
-_wasIncognito = false;
 RYD_INC_Fired = -10;
-_lastTxt = "Incognito status at risk";
-_lastIncognito = 0;
-_txt = "";
+lastIncognito = 0;
+lastTxt = "Incognito status at risk";
 
 waituntil {
 	sleep 1;
@@ -106,7 +107,7 @@ waituntil {
 		};
 	} foreach _units;
 
-	_sideP = [player] call _getTrueVehicleSide; // this gets the side of the player uniform (I think?)
+	_sideP = [player] call getTrueVehicleSide; // this gets the side of the player uniform (I think?)
 	_knownForAll = 0;
 	_vehs = [];
 	_allEnemyG = [];
@@ -121,6 +122,8 @@ waituntil {
 
 		{ // iterate through all groups to get enemies who are within viewdistance
 			if (((side _x) getFriend _sideP) < 0.6) then { // if group is enemy
+				_allEnemyG pushBack _x;
+
 				if (((leader _x) distance _vh) < viewDistance) then { // if leader of group is in sight
 					if (((_x knowsAbout _vh) max (_x knowsAbout _asVh)) > 1) then { // if group leader knows about me
 						_knowAboutMeG pushBack _x;
@@ -130,9 +133,7 @@ waituntil {
 						} foreach (units _x);
 					};
 				};
-
-				_allEnemyG pushBack _x
-			}
+			};
 		} foreach allGroups;
 
 		_vehs pushBack [_x,_vh,_asVh,_knowAboutMe,_knowAboutMeG];
@@ -159,7 +160,7 @@ waituntil {
 
 		if !(_armed) then {
 			if !(_onFoot) then {
-				_side = [_vh] call _getTrueVehicleSide;
+				_side = [_vh] call getTrueVehicleSide;
 
 				{
 					if (((side _x) getFriend _side) < 0.6) exitWith { _wrongVeh = true };
@@ -205,10 +206,10 @@ waituntil {
 					{
 						if ((_x distance _vh) < _safeDst) then {
 							if ((_x distance _vh) < (random (_safeDst/_div)) + (random (_safeDst/_div)) + (random (_safeDst/_div)) + (random (_safeDst/_div))) then {
-								_flank = [_vh,_x] call _isFlanking;
+								_flank = [_vh,_x] call isFlanking;
 
 								if !(_flank) then {
-									_isLOS = [_x,_vh] call _LOSCheck;
+									_isLOS = [_x,_vh] call LOSCheck;
 
 									if (_isLOS) then {_recognized = true};
 								};
@@ -239,25 +240,15 @@ waituntil {
 
 		if !(_unit getVariable ["RYD_INC_Exposed",false]) then {
 			_unit setVariable ["RYD_INC_Undercover",true];
-			_wasIncognito = true;
 		} else {
 			_unit setVariable ["RYD_INC_Undercover",false];
 		};
 
-		/*if ((_unit getVariable ["RYD_INC_Exposed",false]) or {(_armed) or {(_wrongVeh) or {(_firing) or {(_recognized)}}}}) then
-			{
-			diag_log format ["unit %7 : %1 reason - exposed: %2 armed: %3 wrongVeh: %4 firing: %5 recognized: %6 weaponry: %8 vh: %9 unit: %10",time,(_unit getVariable ["RYD_INC_Exposed",false]),_armed,_wrongVeh,_firing,_recognized,name _unit,[(currentWeapon _unit),(primaryWeapon _unit),(secondaryWeapon _unit)],_vh,_unit];
-			};*/
 	} foreach _vehs;
 
 	_exposed = {(_x getVariable ["RYD_INC_Exposed",false])} count _units;
 	_compromised = {((_x getVariable ["RYD_INC_Compromised",false]) and {(_x getVariable ["RYD_INC_Undercover",false])})} count _units;
 	_incognito = {(_x getVariable ["RYD_INC_Undercover",false]) and {!(_x getVariable ["RYD_INC_Compromised",false])}} count _units;
-
-	/*if ((_compromised > 0) and {_lastIncognito > 0}) then
-		{
-		diag_log "at risk"
-		};*/
 
 	if (_exposed == 0) then {
 		{
@@ -280,15 +271,14 @@ waituntil {
 	};
 
 	//hintSilent format ["comp: %1 exp: %2 inc: %3",_compromised,_exposed,_incognito];
-
+	private _txt = "";
 	if (RYD_INC_Diff < 1.5) then {
-		if (_wasIncognito) then {
-			_txt = "";
+		if (true) then {
 			switch (true) do {
 				case (_exposed > 0) :
 					{	_txt = "You've been exposed!"	};
 
-				case (_incognito > _lastIncognito) :
+				case (_incognito > lastIncognito) :
 					{
 					if ((count _units) == 1) then {
 						_txt = "You're now incognito"
@@ -304,7 +294,7 @@ waituntil {
 				default {
 					if ((count _units) > 1) then {
 						if (_compromised > 0) then {
-							if (_lastIncognito > 0) then {
+							if (lastIncognito > 0) then {
 								_txt = format ["Incognito status at risk for %1 of you",_compromised]
 							}
 						};
@@ -321,7 +311,7 @@ waituntil {
 					} else {
 						switch (true) do {
 							case (_compromised > 0) :
-								{ if (_lastIncognito > 0) then { _txt = "Incognito status at risk" }; };
+								{ if (lastIncognito > 0) then { _txt = "Incognito status at risk" }; };
 
 							case (_knownForAll > 0) :
 								{ if (RYD_INC_Diff < 1) then { _txt = "You're being observed" }; };
@@ -330,13 +320,15 @@ waituntil {
 				}
 			}
 		};
-		if !(_txt in [""]) then {
-			if !(_lastTxt in [_txt]) then	{
-				hintSilent _txt;
-				_lastTxt = _txt
+		if !(_txt isEqualTo "") then {
+			if !(lastTxt isEqualTo _txt) then	{
+				hint _txt;
+				lastTxt = _txt;
 			};
+		} else {
+			hint "";
 		};
 	};
 
-	_lastIncognito = _incognito;
+	lastIncognito = _incognito;
 }, 4] call CBA_fnc_addPerFrameHandler;
