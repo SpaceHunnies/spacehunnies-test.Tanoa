@@ -1,16 +1,4 @@
-diag_log "INCOGNITO loaded";
-
-RYD_INC_Diff = 0.5;
-
-RYD_INC_Switch =
-	{
-	switch (RYD_INC_Diff) do
-		{
-		case (0.5) : {RYD_INC_Diff = 1;hint format ["Incognito set to NORMAL\nsafe distance: 100%1\nnotifications: LIMITED",'%']};
-		case (1) : {RYD_INC_Diff = 1.5;hint format ["Incognito set to HARD\nsafe distance: 150%1\nnotifications: NONE",'%']};
-		case (1.5) : {RYD_INC_Diff = 0.5;hint format ["Incognito set to EASY\nsafe distance: 50%1\nnotifications: FULL",'%']};
-		};
-	};
+RYD_INC_Diff = 0.5; // EASY
 
 _LOSCheck = {
 	params ["_pos1O", "_pos2O", ["_cam", objNull], ["_target",objNull]];
@@ -21,20 +9,14 @@ _LOSCheck = {
 	!(terrainintersect [_pos1ATL, _pos2ATL]) && {!(lineintersects [_pos1, _pos2,_cam,_target])};
 };
 
-_isFlanking =
-	{
-	private ["_point","_Rpoint","_angle","_diffA","_axis","_isFlanking","_eyeD"];
+_isFlanking = {
+	params ["_point", "_rPoint"];
+	private ["_angle","_diffA","_axis","_eyeD"];
 
-	_point = _this select 0;
-	_rPoint = _this select 1;
-
-	_eyeD = eyeDirection _rPoint;
-
-	_axis = (_eyeD select 0) atan2 (_eyeD select 1);
+	_eyeD = eyeDirection _rPoint; // 3D Vector
+	_axis = (_eyeD select 0) atan2 (_eyeD select 1); // arctangent, so angle of eyes
 
 	_angle = [getPosATL _rPoint,getPosATL _point,10] call _angTowards;
-
-	_isFlanking = false;
 
 	if (_angle < 0) then {_angle = _angle + 360};
 	if (_axis < 0) then {_axis = _axis + 360};
@@ -43,21 +25,12 @@ _isFlanking =
 
 	if (_diffA < 0) then {_diffA = _diffA + 360};
 
-	if ((_diffA > 45) and (_diffA < 315)) then
-		{
-		_isFlanking = true
-		};
+	(_diffA > 45) && (_diffA < 315)
+};
 
-	_isFlanking
-	};
-
-_angTowards =
-	{
-	private ["_source0", "_target0", "_rnd0","_dX0","_dY0","_angleAzimuth0"];
-
-	_source0 = _this select 0;
-	_target0 = _this select 1;
-	_rnd0 = _this select 2;
+_angTowards = {
+	params ["_source0", "_target0", "_rnd0"];
+	private ["_dX0","_dY0","_angleAzimuth0"];
 
 	_dX0 = (_target0 select 0) - (_source0 select 0);
 	_dY0 = (_target0 select 1) - (_source0 select 1);
@@ -65,7 +38,24 @@ _angTowards =
 	_angleAzimuth0 = (_dX0 atan2 _dY0) + (random (2 * _rnd0)) - _rnd0;
 
 	_angleAzimuth0
+};
+
+_getTrueVehicleSide = {
+	params = ["_vh"];
+	configFile >> "CfgVehicles" >> (typeOf _vh) >> "Side";
+
+	_side = if (isNumber _side) then { getNumber _side } else { -1 };
+
+	switch (_side) do {
+		case (0) : { east };
+		case (1) : { west };
+		case (2) : { resistance };
+		case (3) : { civilian };
+		case (4) : { sideEmpty };
+		case (5) : { sideEnemy };
+		default { sideFriendly };
 	};
+};
 
 _wasIncognito = false;
 RYD_INC_Fired = -10;
@@ -73,86 +63,55 @@ _lastTxt = "Incognito status at risk";
 _lastIncognito = 0;
 _txt = "";
 
-waituntil
-	{
+waituntil {
 	sleep 1;
+	!(isNull player)
+};
 
-	not (isNull player)
-	};
-
-//_mainCycle = 0;
-
-while {true} do
-	{
-	waituntil
-		{
-		sleep (2 + (random 2));
-
-		not (isNull player)
-		};
-
-	//_mainCycle = _mainCycle + 1;
-
+[{
+	// Add player comm menu item for adjusting difficulty
 	_switch = player getvariable "RYD_INC_Switched";
 	if isNil ("_switch") then {
 		player setVariable ["RYD_INC_Switched",true];
-		_sw = [player,"INCSwitch","","",""] call BIS_fnc_addCommMenuItem;
+		[player,"INCSwitch","","",""] call BIS_fnc_addCommMenuItem;
 	};
-
-//_stoper = diag_Ticktime;
 
 	_pgp = group player;
 	_units = units _pgp;
 
-		{
-		_vh = vehicle _x;
-		if not (_x == _vh) then
-			{
+	{ // attach event handlers to all units/vehicles in player group
+		_vh = vehicle _x; // get vehicle of the unit
+		if !(_x == _vh) then { // if we're in a vehicle
+			_fEHadded = _vh getVariable "RYD_INC_FEH"; // look for the event handler
+			if (isNil "_fEHadded") then { // if not there, attach it
+				_ix = _vh addEventHandler ["Fired",
+				  {
+						if (({ (_x in (_this select 0)) } count _units) > 0) then { // if this vehicle is in player's group
+							RYD_INC_Fired = time // last time we fired was ...
+						} else { // vehicle no longer in player group, remove event handler
+							private _i = vehicle (_this select 0);
+							private _eh = _i getVariable "RYD_INC_FEH";
+							_i removeEventHandler _eh;
+						};
+					};
+				];
+				_vh setVariable ["RYD_INC_FEH", _ix];
+			};
+		} else { // we are not in a vehicle
 			_fEHadded = _vh getVariable "RYD_INC_FEH";
-			if (isNil "_fEHadded") then
-				{
-				_ix = _vh addEventHandler ["Fired",{if (({(_x in (_this select 0))} count (units (group player))) > 0) then {RYD_INC_Fired = time} else {(vehicle (_this select 0)) removeEventHandler ((vehicle (_this select 0)) getVariable "RYD_INC_FEH")}}];
+			if (isNil "_fEHadded") then { // attach event handler to player
+				_ix = _vh addEventHandler ["Fired",{ RYD_INC_Fired = time} ];
 				_vh setVariable ["RYD_INC_FEH",_ix];
-				}
-			}
-		else
-			{
-			_fEHadded = _vh getVariable "RYD_INC_FEH";
-			if (isNil "_fEHadded") then
-				{
-				_ix = _vh addEventHandler ["Fired",{RYD_INC_Fired = time}];
-				_vh setVariable ["RYD_INC_FEH",_ix];
-				}
-			}
-		}
-	foreach _units;
-
-	_sideP = configFile >> "CfgVehicles" >> (typeOf player) >> "Side";
-
-	if (isNumber _sideP) then
-		{
-		_sideP = getNumber _sideP
-		}
-	else
-		{
-		_sideP = -1
+			};
 		};
+	} foreach _units;
 
-	switch (_sideP) do
-		{
-		case (0) : {_sideP = east};
-		case (1) : {_sideP = west};
-		case (2) : {_sideP = resistance};
-		case (3) : {_sideP = civilian};
-		default {_sideP = sideFriendly}
-		};
-
+	_sideP = [player] call _getTrueVehicleSide; // this gets the side of the player uniform (I think?)
 	_knownForAll = 0;
-
 	_vehs = [];
 	_allEnemyG = [];
 
-		{
+	{ // for each unit, find out who knows about it
 		_knowAboutMe = [];
 		_knowAboutMeG = [];
 		_vh = vehicle _x;
@@ -160,16 +119,16 @@ while {true} do
 
 		if (isNull _asVh) then { _asVh = _vh };
 
-		{
-			if (((side _x) getFriend _sideP) < 0.6) then {
-				if (((leader _x) distance _vh) < viewDistance) then {
-					if (((_x knowsAbout _vh) max (_x knowsAbout _asVh)) > 1) then {
+		{ // iterate through all groups to get enemies who are within viewdistance
+			if (((side _x) getFriend _sideP) < 0.6) then { // if group is enemy
+				if (((leader _x) distance _vh) < viewDistance) then { // if leader of group is in sight
+					if (((_x knowsAbout _vh) max (_x knowsAbout _asVh)) > 1) then { // if group leader knows about me
 						_knowAboutMeG pushBack _x;
 
 						{
-							if not (captive _x) then { _knowAboutMe pushBack _x }
+							if !(captive _x) then { _knowAboutMe pushBack _x };
 						} foreach (units _x);
-					}
+					};
 				};
 
 				_allEnemyG pushBack _x
@@ -180,7 +139,7 @@ while {true} do
 	} foreach _units;
 
 	{
-		_unit = _x select 0;
+		_unit = _x select 0; // variables exactly the same as above
 		_vh = _x select 1;
 		_asVh = _x select 2;
 		_enemies = _x select 3;
@@ -188,39 +147,19 @@ while {true} do
 
 		_onFoot = (_unit == _vh);
 
-		_armed = false;
-		_wrongVeh = false;
-		_firing = false;
-		_recognized = false;
+		// all the conditions that can trigger losing incognito
+		_armed = false; // obvious
+		_wrongVeh = false; // in a vehicle hostile to the enemy
+		_firing = false; // you just fired a gun
+		_recognized = false; //
 
-		if ((_onFoot) and {(({not ((toLower _x) in ["","throw"])} count [(currentWeapon _unit),(primaryWeapon _unit),(secondaryWeapon _unit)]) > 0)}) then
-			{
+		if ((_onFoot) and {(({not ((toLower _x) in ["","throw"])} count [(currentWeapon _unit),(primaryWeapon _unit),(secondaryWeapon _unit)]) > 0)}) then {
 			_armed = true
-			};
+		};
 
-		if not (_armed) then
-			{
-			if not (_onFoot) then
-				{
-				_side = configFile >> "CfgVehicles" >> (typeOf _vh) >> "Side";
-
-				if (isNumber _side) then
-					{
-					_side = getNumber _side
-					}
-				else
-					{
-					_side = -1
-					};
-
-				switch (_side) do
-					{
-					case (0) : {_side = east};
-					case (1) : {_side = west};
-					case (2) : {_side = resistance};
-					case (3) : {_side = civilian};
-					default {_side = sideFriendly}
-					};
+		if !(_armed) then {
+			if !(_onFoot) then {
+				_side = [_vh] call _getTrueVehicleSide;
 
 					{
 					if (((side _x) getFriend _side) < 0.6) exitWith
@@ -473,4 +412,4 @@ while {true} do
 	_lastIncognito = _incognito;
 
 	//player sidechat format ["czas: %1",diag_Ticktime - _stoper]
-	};
+}, [player], 4] call CBA_fnc_addPerFrameHandler;
