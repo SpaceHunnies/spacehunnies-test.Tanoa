@@ -25,7 +25,7 @@ _isFlanking = {
 
 	if (_diffA < 0) then {_diffA = _diffA + 360};
 
-	(_diffA > 45) && (_diffA < 315)
+	(_diffA > 45) && (_diffA < 315);
 };
 
 _angTowards = {
@@ -37,7 +37,7 @@ _angTowards = {
 
 	_angleAzimuth0 = (_dX0 atan2 _dY0) + (random (2 * _rnd0)) - _rnd0;
 
-	_angleAzimuth0
+	_angleAzimuth0;
 };
 
 _getTrueVehicleSide = {
@@ -65,7 +65,7 @@ _txt = "";
 
 waituntil {
 	sleep 1;
-	!(isNull player)
+	!(isNull player);
 };
 
 [{
@@ -93,7 +93,7 @@ waituntil {
 							private _eh = _i getVariable "RYD_INC_FEH";
 							_i removeEventHandler _eh;
 						};
-					};
+					}
 				];
 				_vh setVariable ["RYD_INC_FEH", _ix];
 			};
@@ -148,12 +148,12 @@ waituntil {
 		_onFoot = (_unit == _vh);
 
 		// all the conditions that can trigger losing incognito
-		_armed = false; // obvious
+		_armed = false; // obvious. only matters if on foot.
 		_wrongVeh = false; // in a vehicle hostile to the enemy
 		_firing = false; // you just fired a gun
 		_recognized = false; //
 
-		if ((_onFoot) and {(({not ((toLower _x) in ["","throw"])} count [(currentWeapon _unit),(primaryWeapon _unit),(secondaryWeapon _unit)]) > 0)}) then {
+		if ((_onFoot) and {(({!((toLower _x) in ["","throw"])} count [(currentWeapon _unit),(primaryWeapon _unit),(secondaryWeapon _unit)]) > 0)}) then {
 			_armed = true
 		};
 
@@ -161,34 +161,25 @@ waituntil {
 			if !(_onFoot) then {
 				_side = [_vh] call _getTrueVehicleSide;
 
-					{
-					if (((side _x) getFriend _side) < 0.6) exitWith
-						{
-						_wrongVeh = true
-						}
-					}
-				foreach _allEnemyG
+				{
+					if (((side _x) getFriend _side) < 0.6) exitWith { _wrongVeh = true };
+				} foreach _allEnemyG;
+			};
+
+			if !(_wrongVeh) then {
+				if ((time - RYD_INC_Fired) < 10) then { // if its been 10 seconds since you last fired a gun
+					_firing = true
 				};
 
-			if not (_wrongVeh) then
-				{
-				if ((time - RYD_INC_Fired) < 10) then
-					{
-					_firing = true
-					};
-
-				if not (_firing) then
-					{
+				if !(_firing) then {
 					_div = 3 + sunOrMoon;
 					_safeDst = 80 * RYD_INC_Diff;
 
-					if (_onFoot) then
-						{
+					if (_onFoot) then {
 						_speed = [0,0,0] distance (velocity _vh);
 						_stance = stance _unit;
 
-						switch (_stance) do
-							{
+						switch (_stance) do {
 							case ("CROUCH") :
 								{
 								_div = _div/1.5;
@@ -200,45 +191,37 @@ waituntil {
 								_div = _div/2;
 								_safeDst = _safeDst * (1.5/(2 - sunOrMoon));
 								};
-							};
-
-						if (_speed > 2.5) then
-							{
-							_safeDst = _safeDst * ((_speed - 1.5)^0.45);
-							}
-						}
-
-					else
-						{
-						_safeDst = 50 * RYD_INC_Diff
 						};
+
+						if (_speed > 2.5) then {
+							_safeDst = _safeDst * ((_speed - 1.5)^0.45);
+						};
+					} else {
+						_safeDst = 50 * RYD_INC_Diff
+					};
 
 					_safeDst = _safeDst - ((_safeDst * (1 - sunOrMoon))/2);
 
-						{
-						if ((_x distance _vh) < _safeDst) then
-							{
-							if ((_x distance _vh) < (random (_safeDst/_div)) + (random (_safeDst/_div)) + (random (_safeDst/_div)) + (random (_safeDst/_div))) then
-								{
+					{
+						if ((_x distance _vh) < _safeDst) then {
+							if ((_x distance _vh) < (random (_safeDst/_div)) + (random (_safeDst/_div)) + (random (_safeDst/_div)) + (random (_safeDst/_div))) then {
 								_flank = [_vh,_x] call _isFlanking;
 
-								if not (_flank) then
-									{
+								if !(_flank) then {
 									_isLOS = [_x,_vh] call _LOSCheck;
 
-									if (_isLOS) then {_recognized = true}
-									}
-								}
+									if (_isLOS) then {_recognized = true};
+								};
 							};
+						};
 
-						if (_recognized) exitWith {}
-						}
-					foreach _enemies
-					}
-				}
+					  if (_recognized) exitWith {}
+					} foreach _enemies;
+				};
 			};
+		};
 
-		RYD_INC_Fired = -10;
+		RYD_INC_Fired = -10; // hack to make the check equal 0
 
 		_unit setVariable ["RYD_INC_Compromised",((_unit getVariable ["RYD_INC_Exposed",false]) or {(_armed) or {(_wrongVeh) or {(_firing) or {(_recognized)}}}})];
 
@@ -246,170 +229,114 @@ waituntil {
 
 		_unit setVariable ["RYD_INC_Exposed",false];
 
-		if (_unit getVariable ["RYD_INC_Compromised",false]) then
-			{
-			if (_knownFor > 0) then
-				{
+		if (_unit getVariable ["RYD_INC_Compromised",false]) then {
+			if (_knownFor > 0) then {
 				_unit setVariable ["RYD_INC_Exposed",true]
-				}
 			};
+		};
 
-		if (_knownFor > 0) then
-			{
-			_knownForAll = _knownFor
-			};
+		if (_knownFor > 0) then { _knownForAll = _knownFor };
 
-		if not (_unit getVariable ["RYD_INC_Exposed",false]) then
-			{
+		if !(_unit getVariable ["RYD_INC_Exposed",false]) then {
 			_unit setVariable ["RYD_INC_Undercover",true];
-			_wasIncognito = true
-			}
-		else
-			{
-			_unit setVariable ["RYD_INC_Undercover",false]
-			};
+			_wasIncognito = true;
+		} else {
+			_unit setVariable ["RYD_INC_Undercover",false];
+		};
 
 		/*if ((_unit getVariable ["RYD_INC_Exposed",false]) or {(_armed) or {(_wrongVeh) or {(_firing) or {(_recognized)}}}}) then
 			{
 			diag_log format ["unit %7 : %1 reason - exposed: %2 armed: %3 wrongVeh: %4 firing: %5 recognized: %6 weaponry: %8 vh: %9 unit: %10",time,(_unit getVariable ["RYD_INC_Exposed",false]),_armed,_wrongVeh,_firing,_recognized,name _unit,[(currentWeapon _unit),(primaryWeapon _unit),(secondaryWeapon _unit)],_vh,_unit];
 			};*/
-		}
-	foreach _vehs;
+	} foreach _vehs;
 
 	_exposed = {(_x getVariable ["RYD_INC_Exposed",false])} count _units;
 	_compromised = {((_x getVariable ["RYD_INC_Compromised",false]) and {(_x getVariable ["RYD_INC_Undercover",false])})} count _units;
-	_incognito = {(_x getVariable ["RYD_INC_Undercover",false]) and {not (_x getVariable ["RYD_INC_Compromised",false])}} count _units;
+	_incognito = {(_x getVariable ["RYD_INC_Undercover",false]) and {!(_x getVariable ["RYD_INC_Compromised",false])}} count _units;
 
 	/*if ((_compromised > 0) and {_lastIncognito > 0}) then
 		{
 		diag_log "at risk"
 		};*/
 
-	if (_exposed == 0) then
+	if (_exposed == 0) then {
 		{
-			{
 			_unit = _x;
 			_unit setVariable ["RYD_INC_Settings",[behaviour _unit,combatMode _unit]];
-			_unit setCombatMode "CARELESS";
-			_unit setBehaviour "BLUE";
+			_unit setCombatMode "GREEN";
+			_unit setBehaviour "SAFE";
 			_unit setCaptive true;
-			}
-		foreach _units
-		}
-	else
+		} foreach _units;
+	}	else {
 		{
-			{
 			_unit = _x;
 
 			_unit setVariable ["RYD_INC_Undercover",false];
-			_settings = _unit getVariable ["RYD_INC_Settings",["AWARE","YELLOW"]];
+			_settings = _unit getVariable ["RYD_INC_Settings",["YELLOW","AWARE"]];
 			_unit setCombatMode (_settings select 0);
 			_unit setBehaviour (_settings select 1);
 			_unit setCaptive false
-			}
-		foreach _units
-		};
+		} foreach _units;
+	};
 
 	//hintSilent format ["comp: %1 exp: %2 inc: %3",_compromised,_exposed,_incognito];
 
-	if (RYD_INC_Diff < 1.5) then
-		{
-		if (_wasIncognito) then
-			{
+	if (RYD_INC_Diff < 1.5) then {
+		if (_wasIncognito) then {
 			_txt = "";
-			switch (true) do
-				{
+			switch (true) do {
 				case (_exposed > 0) :
-					{
-					_txt = "You've been exposed!"
-					};
+					{	_txt = "You've been exposed!"	};
 
 				case (_incognito > _lastIncognito) :
 					{
-					if ((count _units) == 1) then
-						{
+					if ((count _units) == 1) then {
 						_txt = "You're now incognito"
-						}
-					else
-						{
-						if (_incognito == 1) then
-							{
+					} else {
+						if (_incognito == 1) then {
 							_txt = "One of you is now incognito"
-							}
-						else
-							{
+						} else {
 							_txt = format ["The %1 of you are now incognito",_incognito]
-							}
 						}
-					};
+					}
+				};
 
-				default
-					{
-					if ((count _units) > 1) then
-						{
-						if (_compromised > 0) then
-							{
-							if (_lastIncognito > 0) then
-								{
+				default {
+					if ((count _units) > 1) then {
+						if (_compromised > 0) then {
+							if (_lastIncognito > 0) then {
 								_txt = format ["Incognito status at risk for %1 of you",_compromised]
-								}
-							};
+							}
+						};
 
-						if (RYD_INC_Diff < 1) then
-							{
-							if (_knownForAll > 0) then
-								{
-								if (_knownForAll == 1) then
-									{
+						if (RYD_INC_Diff < 1) then {
+							if (_knownForAll > 0) then {
+								if (_knownForAll == 1) then {
 									_txt = _txt + (format ["\nOne of you is being observed",_knownForAll])
-									}
-								else
-									{
+								} else {
 									_txt = _txt + (format ["\nThe %1 of you are being observed",_knownForAll])
-									}
 								}
 							}
 						}
-					else
-						{
-						switch (true) do
-							{
+					} else {
+						switch (true) do {
 							case (_compromised > 0) :
-								{
-								if (_lastIncognito > 0) then
-									{
-									_txt = "Incognito status at risk"
-									}
-								};
+								{ if (_lastIncognito > 0) then { _txt = "Incognito status at risk" }; };
 
 							case (_knownForAll > 0) :
-								{
-								if (RYD_INC_Diff < 1) then
-									{
-									_txt = "You're being observed"
-									}
-								}
-							}
+								{ if (RYD_INC_Diff < 1) then { _txt = "You're being observed" }; };
 						}
 					}
 				}
-			};
-
-		//if (_mainCycle > 10) then
-			//{
-			if not (_txt in [""]) then
-				{
-				if not (_lastTxt in [_txt]) then
-					{
-					//titleText [_txt,"PLAIN DOWN",0.55];
-					hintSilent _txt;
-					_lastTxt = _txt
-					}
-				}
-			//}
+			}
 		};
+		if !(_txt in [""]) then {
+			if !(_lastTxt in [_txt]) then	{
+				hintSilent _txt;
+				_lastTxt = _txt
+			};
+		};
+	};
 
 	_lastIncognito = _incognito;
-
-	//player sidechat format ["czas: %1",diag_Ticktime - _stoper]
-}, [player], 4] call CBA_fnc_addPerFrameHandler;
+}, 4] call CBA_fnc_addPerFrameHandler;
