@@ -2600,7 +2600,7 @@ class Mission
 											"STRING"
 										};
 									};
-									value="true";
+									value="false";
 								};
 							};
 						};
@@ -4573,11 +4573,11 @@ class Mission
 					dataType="Logic";
 					class PositionInfo
 					{
-						position[]={4130.437,0,5570.978};
+						position[]={4130.437,0.00022530556,5570.978};
 					};
 					id=5;
 					type="ALiVE_sys_profile";
-					atlOffset=2.3137746;
+					atlOffset=2.3139999;
 					class CustomAttributes
 					{
 						class Attribute0
@@ -4690,7 +4690,7 @@ class Mission
 											"STRING"
 										};
 									};
-									value="true";
+									value="false";
 								};
 							};
 						};
@@ -4740,11 +4740,11 @@ class Mission
 					dataType="Logic";
 					class PositionInfo
 					{
-						position[]={4127.4204,0,5573.8916};
+						position[]={4127.4199,-0.00024938583,5573.8921};
 					};
 					id=4;
 					type="ALiVE_SYS_playeroptions";
-					atlOffset=1.2444934;
+					atlOffset=1.244;
 					class CustomAttributes
 					{
 						class Attribute0
@@ -4971,7 +4971,7 @@ class Mission
 											"STRING"
 										};
 									};
-									value="true";
+									value="false";
 								};
 							};
 						};
@@ -5518,7 +5518,7 @@ class Mission
 											"STRING"
 										};
 									};
-									value="true";
+									value="false";
 								};
 							};
 						};
@@ -5622,7 +5622,7 @@ class Mission
 				};
 			};
 			id=168;
-			atlOffset=-10.300334;
+			atlOffset=-10.300374;
 		};
 		class Item4
 		{
