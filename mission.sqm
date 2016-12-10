@@ -16,14 +16,14 @@ class EditorData
 	};
 	class LayerIndexProvider
 	{
-		nextID=68;
+		nextID=106;
 	};
 	class Camera
 	{
-		pos[]={3442.8916,300.02109,6070.0396};
-		dir[]={-0.86753511,-0.45545706,-0.20041664};
-		up[]={-0.44377193,0.89025009,-0.10251827};
-		aside[]={-0.22512226,-1.0095537e-006,0.97446448};
+		pos[]={3494.8264,383.97128,6135.729};
+		dir[]={-0.49870765,-0.62268466,0.60314161};
+		up[]={-0.39677766,0.78248602,0.47986794};
+		aside[]={0.77077144,-1.7725397e-006,0.63731652};
 	};
 };
 binarizationWanted=0;
@@ -3602,7 +3602,7 @@ class Mission
 													"STRING"
 												};
 											};
-											value="0.5";
+											value="1.5";
 										};
 									};
 								};
@@ -3621,7 +3621,7 @@ class Mission
 													"STRING"
 												};
 											};
-											value="0.6";
+											value="1";
 										};
 									};
 								};
@@ -3795,7 +3795,7 @@ class Mission
 															"STRING"
 														};
 													};
-													value="1.5";
+													value="2";
 												};
 											};
 										};
@@ -3814,7 +3814,7 @@ class Mission
 															"STRING"
 														};
 													};
-													value="0.6";
+													value="1";
 												};
 											};
 										};
@@ -3992,7 +3992,7 @@ class Mission
 															"STRING"
 														};
 													};
-													value="1.5";
+													value="2";
 												};
 											};
 										};
@@ -4011,7 +4011,7 @@ class Mission
 															"STRING"
 														};
 													};
-													value="0.6";
+													value="1";
 												};
 											};
 										};
