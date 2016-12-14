@@ -325,8 +325,6 @@ waituntil {
 				hint _txt;
 				lastTxt = _txt;
 			};
-		} else {
-			hint "";
 		};
 	};
 
