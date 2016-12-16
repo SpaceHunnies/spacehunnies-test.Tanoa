@@ -657,7 +657,7 @@ class Mission
 		year=2030;
 		month=4;
 		day=6;
-		hour=20;
+		hour=12;
 		minute=0;
 		startFogBase=250;
 		forecastFogBase=250;
